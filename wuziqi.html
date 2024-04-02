@@ -61,7 +61,7 @@
                         noChoose = false;
                         const copy = copyState(state);
                         copy[i][j] = currUser;
-                        const checkwin = checkWin(state, currUser);
+                        const checkwin = checkWin(copy, currUser);
                         if (checkwin) {
                             juece.set(createKey(currUser, state), new Value([i, j], 1));
                             return 1;
