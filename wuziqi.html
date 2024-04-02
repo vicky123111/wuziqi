@@ -1,0 +1,301 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            background: skyblue;
+        }
+
+        table {
+            margin: 20px auto;
+        }
+
+        td {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #FFF;
+        }
+
+        .heiqi {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #000;
+            margin: 0px auto;
+        }
+
+        .baiqi {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #FFF;
+            margin: 0px auto;
+        }
+    </style>
+
+    <script>
+
+
+        class Value {
+            constructor(zb, res) {
+                this.zb = zb;
+                this.res = res;
+            }
+        }
+
+        const max = 3;
+        const juece = new Map();
+
+        function boyi(currUser, state) {
+            if (juece.has(createKey(currUser, state))) {
+                return juece.get(createKey(currUser, state)).res;
+            }
+            let choose = -2;
+            let chooseIJ = null;
+            let noChoose = true;
+            for (let i = 0; i < state.length; ++i) {
+                for (let j = 0; j < state[0].length; ++j) {
+                    if (state[i][j] === 0) {
+                        noChoose = false;
+                        const copy = copyState(state);
+                        copy[i][j] = currUser;
+                        const checkwin = checkWin(state, currUser);
+                        if (checkwin) {
+                            juece.set(createKey(currUser, state), new Value([i, j], 1));
+                            return 1;
+                        }
+                        const by = boyi(reserve(currUser), copy);
+                        if (-by > choose) {
+                            choose = -by;
+                            chooseIJ = [i, j];
+                        }
+                    }
+                }
+            }
+            if (noChoose) return 0;
+            juece.set(createKey(currUser, state), new Value(chooseIJ, choose));
+            return choose;
+        }
+
+        function createKey(currUser, state) {
+            let key = currUser + "-";
+            for (let i = 0; i < state.length; ++i) {
+                for (let j = 0; j < state[0].length; ++j) {
+                    key += state[i][j];
+                }
+            }
+            return key;
+        }
+
+        function copyState(state) {
+            const cp = [];
+            for (let i = 0; i < state.length; ++i) {
+                cp[i] = state[i].slice();
+            }
+            return cp;
+        }
+
+        function checkWin(state, currUser) {
+            for (let i = 0; i < state.length; ++i) {
+                for (let j = 0; j < state[0].length; ++j) {
+                    if (currUser === state[i][j]) {
+                        // heng
+                        if (getHengCount(i, j, state) >= max) return true;
+                        // su
+                        if (getSuCount(i, j, state) >= max) return true;
+                        // pie
+                        if (getPieCount(i, j, state) >= max) return true;
+                        // na
+                        if (getNaCount(i, j, state) >= max) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function getNaCount(i, j, state) {
+            let count = 1;
+            for (let x = 1; i - x >= 0 && j - x >= 0; ++x) {
+                if (state[i - x][j - x] === state[i][j]) {
+                    ++count;
+                } else {
+                    break;
+                }
+            }
+            for (let x = 1; i + x <= state.length - 1 && j + x <= state[0].length - 1; ++x) {
+                if (state[i + x][j + x] === state[i][j]) {
+                    ++count;
+                } else {
+                    break;
+                }
+            }
+            return count;
+        }
+
+        function getPieCount(i, j, state) {
+            let count = 1;
+            for (let x = 1; i - x >= 0 && j + x <= state[0].length - 1; ++x) {
+                if (state[i - x][j + x] === state[i][j]) {
+                    ++count;
+                } else {
+                    break;
+                }
+            }
+            for (let x = 1; i + x <= state.length - 1 && j - x >= 0; ++x) {
+                if (state[i + x][j - x] === state[i][j]) {
+                    ++count;
+                } else {
+                    break;
+                }
+            }
+            return count;
+        }
+
+        function getSuCount(i, j, state) {
+            let count = 1;
+            for (let x = i - 1; x >= 0; --x) {
+                if (state[x][j] === state[i][j]) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            for (let x = i + 1; x < state.length; ++x) {
+                if (state[x][j] === state[i][j]) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            return count;
+        }
+
+        function getHengCount(i, j, state) {
+            let count = 1;
+            for (let x = j - 1; x >= 0; --x) {
+                if (state[i][x] === state[i][j]) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            for (let x = j + 1; x < state[i].length; ++x) {
+                if (state[i][x] === state[i][j]) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+            return count;
+        }
+
+        function reserve(currUser) {
+            if (currUser === 1) return 2;
+            return 1;
+        }
+
+        function printState(state) {
+            let output = " ";
+            for (let i = 0; i < state[0].length; ++i) {
+                output += i;
+            }
+            output += "\n";
+            for (let i = 0; i < state.length; ++i) {
+                output += i;
+                for (let j = 0; j < state[0].length; ++j) {
+                    output += state[i][j];
+                }
+                output += "\n";
+            }
+            output += "====================";
+            console.log(output);
+        }
+
+        const state = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+           
+        ];
+
+       
+
+
+
+        //while,do while , for
+        
+        document.write("<table cellpadding=0 cellspacing=0>");
+
+        for (var i = 0; i < state.length; i++) {
+            document.write("<tr>");
+
+            for (var j = 0; j < state[i].length; j++) {
+                document.write("<td id=\"td" + i + "-" + j + "\" onclick=\"luozi(this)\" i=" + i + "  j=" + j + " ></td>");
+            }
+
+            document.write("</tr>");
+        }
+
+        document.write("</table>");
+
+
+        function init(){
+            const boyiResult = boyi(1, state);
+            console.log(boyiResult);
+            const val = juece.get(createKey(1, state)).zb;
+            state[val[0]][val[1]] = 1;
+        
+        //第一次渲染
+            for (let i = 0; i < state.length; ++i)
+                for (let j = 0; j < state[i].length; ++j) {
+                    if (state[i][j] == 1) {
+                        let fd = document.getElementById("td" + i + "-" + j);
+                        fd.innerHTML = "<div class='heiqi'></div>";
+                    } else if (state[i][j] == 2) {
+                        let fd = document.getElementById("td" + i + "-" + j);
+                        fd.innerHTML = "<div class='baiqi'></div>";
+                    }
+                }
+            let fd = document.getElementById("td" + val[0] + "-" + val[1]);
+            fd.innerHTML = "<div class='heiqi'></div>";
+        }
+
+        function luozi(dom) {
+            let i = parseInt(dom.attributes['i'].value);
+            let j = parseInt(dom.attributes['j'].value);
+            if (state[i][j] == 0) {
+                state[i][j] = 2;
+                dom.innerHTML = "<div class='baiqi'></div>";
+                let zb = juece.get(createKey(1, state)).zb;
+                state[zb[0]][zb[1]] = 1;
+                console.log(zb);
+                let d = document.getElementById("td" + zb[0] + "-" + zb[1]);
+                d.innerHTML = "<div class='heiqi'></div>";
+            }
+            console.log(dom)
+
+
+            //为了防止已经落子的格子继续触发点击事件，所以取消该点击事件
+            dom.onclick = "";
+
+        }
+
+        function aiFirst(dom){
+            init();
+        }
+
+
+
+
+    </script>
+</head>
+
+<body>
+    <button onclick="aiFirst()">ai start</button>
+    
+
+</body>
+
+</html>
